@@ -1,67 +1,48 @@
-const mongoose = require('mongoose');
 const keys = require('../config/keys');
-
-const Movie = mongoose.model('movies');
+const mysql = require('mysql');
 const { calculateAverage } = require('../utils/calculateAverage');
 
+const mySqlCon = mysql.createConnection(keys.mysql);
+
 module.exports = app => {
-	app.post('/api/addMovie', async (req, res) => {
-		const { name, genre, year, averageRating, numberOfRatings } = req.body;
-		const movie = new Movie({
-			name,
-			genre,
-			year,
-			averageRating,
-			numberOfRatings,
+	app.post('/api/addMovie', (req, res) => {
+		const { name, genre, year, averageRating } = req.body;
+
+		const addMovieQuery = `INSERT INTO movies (name, genre, year, average_rating) VALUES ("${name}", "${genre}", ${year}, ${averageRating})`;
+		mySqlCon.query(addMovieQuery, (err, result) => {
+			if (err) return res.status(400).send(err);
+
+			res.status(200).send(result.affectedRows);
 		});
-
-		try {
-			await movie.save();
-			res.status(200).send(movie);
-		} catch (err) {
-			res.status(422).send(err);
-		}
 	});
 
-	app.post('/api/searchMovies', async (req, res) => {
+	app.post('/api/searchMovies', (req, res) => {
 		const { genre, start, end } = req.body;
+		const searchMoviesQuery = `SELECT name,year,average_rating FROM movies WHERE genre = "${genre}" AND year>=${start} AND year<=${end}`;
 
-		try {
-			const movies = await Movie.find({
-				genre,
-				year: {
-					$gte: start,
-					$lte: end,
-				},
-			});
+		mySqlCon.query(searchMoviesQuery, (err, movies) => {
+			if (err) return res.status(400).send(err);
+
 			res.status(200).send({ movies });
-		} catch (e) {
-			res.status(400).send(e);
-		}
+		});
 	});
 
-	app.patch('/api/rateMovie', async (req, res) => {
+	app.patch('/api/rateMovie', (req, res) => {
 		const { name, rating } = req.body;
 		if (rating < 0 || rating > 10) res.status(422).send('the rating is an invalid number');
-		try {
-			const movie = await Movie.findOne({ name });
-			const { averageRating, numberOfRatings } = movie;
-			const updatedAverageRating = calculateAverage(rating, averageRating, numberOfRatings);
-			const result = await Movie.findOneAndUpdate(
-				{ name },
-				{
-					$set: {
-						averageRating: updatedAverageRating,
-					},
-					$inc: {
-						numberOfRatings: 1,
-					},
-				},
-				{ new: true }
-			).exec();
-			res.status(200).send(result);
-		} catch (err) {
-			res.status(400).send(err);
-		}
+		const getMovieQuery = `SELECT average_rating, number_of_ratings FROM movies WHERE name = "${name}"`;
+
+		mySqlCon.query(getMovieQuery, (err, result) => {
+			if (err) return res.status(400).send(err);
+			const { average_rating: averageRating, number_of_ratings: numberOfRatings } = result[0];
+			const updatedRating = calculateAverage(rating, averageRating, numberOfRatings);
+			const updateMovieQuesry = `UPDATE movies SET average_rating = ${updatedRating}, number_of_ratings = ${numberOfRatings +
+				1}  WHERE name = "${name}"`;
+			mySqlCon.query(updateMovieQuesry, (err, result) => {
+				if (err) return res.status(400).send(err);
+
+				res.status(200).send(result.affectedRows);
+			});
+		});
 	});
 };

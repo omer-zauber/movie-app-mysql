@@ -1,11 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
-const keys = require("./config/keys");
-require("./models/Movie");
 
-mongoose.Promise = global.Promise;
-mongoose.connect(keys.mongoURI);
+// const keys = require("./config/keys");
 
 const app = express();
 

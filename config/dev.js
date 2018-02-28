@@ -1,3 +1,8 @@
 module.exports = {
-	mongoURI: 'mongodb://omerZauber:password@ds245228.mlab.com:45228/movie-app-dev'
+	mysql: {
+		host: 'localhost',
+		user: 'root',
+		password: 'omerZauber',
+		database: 'mydb',
+	},
 };
