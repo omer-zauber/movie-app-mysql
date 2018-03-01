@@ -62,7 +62,7 @@ export default class MovieCreatePage extends React.Component {
 				}
 			})
 			.catch(error => {
-				if (error.response.data.code === 11000)
+				if (error.response.data.code === 'ER_DUP_ENTRY')
 					this.setState({
 						message: 'This movie already exists in the database! feel free to rate it in the Rating Page.',
 					});

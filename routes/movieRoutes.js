@@ -12,7 +12,7 @@ module.exports = app => {
 		mySqlCon.query(addMovieQuery, (err, result) => {
 			if (err) return res.status(400).send(err);
 
-			res.status(200).send(result.affectedRows);
+			res.status(200).send(result);
 		});
 	});
 
@@ -34,6 +34,7 @@ module.exports = app => {
 
 		mySqlCon.query(getMovieQuery, (err, result) => {
 			if (err) return res.status(400).send(err);
+			if (!result[0]) return res.status(422).send('unable to find movie');
 			const { average_rating: averageRating, number_of_ratings: numberOfRatings } = result[0];
 			const updatedRating = calculateAverage(rating, averageRating, numberOfRatings);
 			const updateMovieQuesry = `UPDATE movies SET average_rating = ${updatedRating}, number_of_ratings = ${numberOfRatings +
@@ -41,8 +42,9 @@ module.exports = app => {
 			mySqlCon.query(updateMovieQuesry, (err, result) => {
 				if (err) return res.status(400).send(err);
 
-				res.status(200).send(result.affectedRows);
+				res.status(200).send(result);
 			});
 		});
+
 	});
 };

@@ -85,8 +85,8 @@ export default class MovieDashboardPage extends React.Component {
 						{this.state.movies.length === 0 && <Col sm={7} className="jumbotron ">
 								Please pick a genre and years range to search for movies!
 							</Col>}
-						{this.state.movies.map(movie => <Col sm={6} key={movie._id}>
-								<Movie name={movie.name} year={movie.year} averageRating={movie.averageRating} />
+						{this.state.movies.map(movie => <Col sm={6} key={movie.name}>
+								<Movie name={movie.name} year={movie.year} averageRating={movie.average_rating} />
 							</Col>)}
 					</Row>
 				</Grid>
